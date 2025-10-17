@@ -312,16 +312,20 @@ async def startup_event():
     # Initialize with some sample data for testing
     from .data.allocations import allocation_store
     from .models import FrequencyAllocation, Location, ServiceBranch, Priority
+    from datetime import timezone
 
-    # Add sample allocations
+    # Add sample allocations (using timezone-aware datetimes)
+    now = datetime.now(timezone.utc)
+    end_of_day = now.replace(hour=23, minute=59, second=59)
+
     sample_allocations = [
         FrequencyAllocation(
             asset_id="ASSET-001",
             frequency_mhz=150.0,
             bandwidth_khz=25.0,
             location=Location(lat=35.0, lon=45.0),
-            start_time=datetime.utcnow(),
-            end_time=datetime.utcnow().replace(hour=23, minute=59),
+            start_time=now,
+            end_time=end_of_day,
             service=ServiceBranch.AIR_FORCE,
             priority=Priority.ROUTINE,
             power_dbm=40.0,
@@ -332,8 +336,8 @@ async def startup_event():
             frequency_mhz=225.5,
             bandwidth_khz=25.0,
             location=Location(lat=35.2, lon=45.3),
-            start_time=datetime.utcnow(),
-            end_time=datetime.utcnow().replace(hour=23, minute=59),
+            start_time=now,
+            end_time=end_of_day,
             service=ServiceBranch.NAVY,
             priority=Priority.PRIORITY,
             power_dbm=45.0,
