@@ -18,6 +18,7 @@ from .provider import (
     ToolCall,
     LLMResponse
 )
+from .cache import get_global_cache
 
 
 class OpenAIProvider(LLMProvider):
@@ -27,10 +28,20 @@ class OpenAIProvider(LLMProvider):
     Supports GPT-4 and GPT-3.5 models with function calling.
     """
 
-    def __init__(self, api_key: str, config: LLMConfig):
-        """Initialize the OpenAI provider."""
+    def __init__(self, api_key: str, config: LLMConfig, enable_cache: bool = True):
+        """
+        Initialize the OpenAI provider.
+
+        Args:
+            api_key: OpenAI API key
+            config: LLM configuration
+            enable_cache: Enable response caching (default: True)
+        """
         super().__init__(api_key, config)
         self.client = AsyncOpenAI(api_key=api_key)
+        self.enable_cache = enable_cache
+        if enable_cache:
+            self.cache = get_global_cache()
 
     async def complete(
         self,
@@ -49,6 +60,18 @@ class OpenAIProvider(LLMProvider):
         Returns:
             LLMResponse with content and tool calls
         """
+        # Check cache if enabled
+        if self.enable_cache:
+            cached_response = self.cache.get(
+                messages=[msg.__dict__ for msg in messages],
+                tools=[tool.__dict__ for tool in tools] if tools else None,
+                system=system,
+                temperature=self.config.temperature,
+                model=self.config.model
+            )
+            if cached_response is not None:
+                return cached_response
+
         # Convert messages to OpenAI format
         openai_messages = self._convert_messages(messages, system)
 
@@ -72,7 +95,20 @@ class OpenAIProvider(LLMProvider):
         response: ChatCompletion = await self.client.chat.completions.create(**request_params)
 
         # Convert response to our format
-        return self._convert_response(response)
+        llm_response = self._convert_response(response)
+
+        # Store in cache if enabled
+        if self.enable_cache:
+            self.cache.put(
+                messages=[msg.__dict__ for msg in messages],
+                response=llm_response,
+                tools=[tool.__dict__ for tool in tools] if tools else None,
+                system=system,
+                temperature=self.config.temperature,
+                model=self.config.model
+            )
+
+        return llm_response
 
     async def stream_complete(
         self,
@@ -256,3 +292,14 @@ class OpenAIProvider(LLMProvider):
                 return limit
 
         return 8192  # Conservative default
+
+    def get_cache_stats(self) -> Optional[Dict[str, Any]]:
+        """
+        Get cache statistics.
+
+        Returns:
+            Cache statistics or None if caching is disabled
+        """
+        if not self.enable_cache:
+            return None
+        return self.cache.get_stats()

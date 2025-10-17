@@ -21,6 +21,12 @@ from .registry import (
     get_global_registry,
     create_provider
 )
+from .cache import (
+    LRUCache,
+    get_global_cache,
+    configure_global_cache,
+    clear_global_cache
+)
 
 __all__ = [
     # Base classes
@@ -38,4 +44,9 @@ __all__ = [
     "ProviderRegistry",
     "get_global_registry",
     "create_provider",
+    # Cache
+    "LRUCache",
+    "get_global_cache",
+    "configure_global_cache",
+    "clear_global_cache",
 ]

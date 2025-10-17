@@ -10,7 +10,7 @@ Provides pub/sub messaging between agents, enabling:
 
 from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import asyncio
 import uuid
@@ -36,7 +36,7 @@ class Message:
     topic: str = ""
     sender: str = ""
     content: Dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     correlation_id: Optional[str] = None  # For request-response patterns
     metadata: Dict[str, Any] = field(default_factory=dict)
 

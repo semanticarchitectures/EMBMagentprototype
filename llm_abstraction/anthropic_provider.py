@@ -18,6 +18,7 @@ from .provider import (
     ToolCall,
     LLMResponse
 )
+from .cache import get_global_cache
 
 
 class AnthropicProvider(LLMProvider):
@@ -27,10 +28,20 @@ class AnthropicProvider(LLMProvider):
     Supports Claude 3 models with function calling capabilities.
     """
 
-    def __init__(self, api_key: str, config: LLMConfig):
-        """Initialize the Anthropic provider."""
+    def __init__(self, api_key: str, config: LLMConfig, enable_cache: bool = True):
+        """
+        Initialize the Anthropic provider.
+
+        Args:
+            api_key: Anthropic API key
+            config: LLM configuration
+            enable_cache: Enable response caching (default: True)
+        """
         super().__init__(api_key, config)
         self.client = anthropic.AsyncAnthropic(api_key=api_key)
+        self.enable_cache = enable_cache
+        if enable_cache:
+            self.cache = get_global_cache()
 
     async def complete(
         self,
@@ -49,6 +60,18 @@ class AnthropicProvider(LLMProvider):
         Returns:
             LLMResponse with content and tool calls
         """
+        # Check cache if enabled
+        if self.enable_cache:
+            cached_response = self.cache.get(
+                messages=[msg.__dict__ for msg in messages],
+                tools=[tool.__dict__ for tool in tools] if tools else None,
+                system=system,
+                temperature=self.config.temperature,
+                model=self.config.model
+            )
+            if cached_response is not None:
+                return cached_response
+
         # Convert messages to Anthropic format
         anthropic_messages = self._convert_messages(messages)
 
@@ -73,7 +96,20 @@ class AnthropicProvider(LLMProvider):
         response: AnthropicMessage = await self.client.messages.create(**request_params)
 
         # Convert response to our format
-        return self._convert_response(response)
+        llm_response = self._convert_response(response)
+
+        # Store in cache if enabled
+        if self.enable_cache:
+            self.cache.put(
+                messages=[msg.__dict__ for msg in messages],
+                response=llm_response,
+                tools=[tool.__dict__ for tool in tools] if tools else None,
+                system=system,
+                temperature=self.config.temperature,
+                model=self.config.model
+            )
+
+        return llm_response
 
     async def stream_complete(
         self,
@@ -223,3 +259,14 @@ class AnthropicProvider(LLMProvider):
             return 200000
 
         return 100000  # Default for older Claude models
+
+    def get_cache_stats(self) -> Optional[Dict[str, Any]]:
+        """
+        Get cache statistics.
+
+        Returns:
+            Cache statistics or None if caching is disabled
+        """
+        if not self.enable_cache:
+            return None
+        return self.cache.get_stats()

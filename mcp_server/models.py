@@ -6,7 +6,7 @@ representing spectrum allocations, deconfliction requests, emitters, and related
 """
 
 from pydantic import BaseModel, Field, validator
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from enum import Enum
 import uuid
@@ -123,7 +123,7 @@ class DeconflictionRequest(BaseModel):
     duration_minutes: int = Field(..., gt=0)
     priority: Priority
     purpose: str
-    submitted_at: datetime = Field(default_factory=datetime.utcnow)
+    submitted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class DeconflictionResponse(BaseModel):
@@ -248,7 +248,7 @@ class InterferenceReport(BaseModel):
     )
     interference_sources: List[InterferenceSource] = []
     total_noise_floor: float = Field(..., description="Total noise floor in dBm")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AllocationResult(BaseModel):
@@ -266,7 +266,7 @@ class SpectrumPlan(BaseModel):
     start_time: datetime
     end_time: datetime
     allocations: List[FrequencyAllocation] = []
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # MCP Protocol Wrappers

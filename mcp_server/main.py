@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 import structlog
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 from .models import MCPRequest, MCPResponse, MCPError
@@ -266,7 +266,7 @@ async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "service": "EMBM-J DS MCP Server"
     }
 

@@ -5,7 +5,7 @@ These functions implement the MCP tools that agents can call to interact
 with the EMBM-J DS system.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List
 import uuid
 import structlog
@@ -260,7 +260,7 @@ async def allocate_frequency(
         return result.model_dump(mode='json')
 
     # Create allocation
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     end_time = start_time + timedelta(minutes=duration_minutes)
 
     allocation = FrequencyAllocation(
@@ -422,7 +422,7 @@ async def get_interference_report(
     allocations = await allocation_store.get_by_frequency_range(
         min_freq,
         max_freq,
-        datetime.utcnow()
+        datetime.now(timezone.utc)
     )
 
     # Calculate interference from each allocation
@@ -516,7 +516,7 @@ async def _analyze_friendly_impact(actions: List[FriendlyAction]) -> List[Affect
     affected: List[AffectedAsset] = []
 
     # Get all current allocations
-    allocations = await allocation_store.get_active_allocations(datetime.utcnow())
+    allocations = await allocation_store.get_active_allocations(datetime.now(timezone.utc))
 
     for action in actions:
         for alloc in allocations:
