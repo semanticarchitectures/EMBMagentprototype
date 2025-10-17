@@ -1,0 +1,74 @@
+[project]
+name = "embm-agent-prototype"
+version = "0.1.0"
+description = "Multi-agent system for EMBM-J DS via MCP"
+requires-python = ">=3.11"
+authors = [
+    { name = "Kevin Kelly", email = "kevin@example.com" }
+]
+readme = "README.md"
+license = "MIT"
+
+dependencies = [
+    "langchain>=0.1.0",
+    "langgraph>=0.0.20",
+    "anthropic>=0.18.0",
+    "openai>=1.0.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "pydantic>=2.5.0",
+    "httpx>=0.26.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=24.1.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+    "ipython>=8.20.0",
+]
+
+dashboard = [
+    "streamlit>=1.31.0",
+    "plotly>=5.18.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["agents*", "mcp_server*", "mcp_client*", "llm_abstraction*", "broker*", "workflows*", "dashboard*", "evaluation*"]
+exclude = ["tests*", "docs*", "scripts*", "logs*", "data*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]  # Line too long (handled by black)
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

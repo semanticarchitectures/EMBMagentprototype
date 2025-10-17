@@ -1,0 +1,19 @@
+{
+  "jsonrpc": "2.0",
+  "method": "request_deconfliction",
+  "params": {
+    "asset_rid": "TEST-ASSET-001",
+    "frequency_mhz": 152.5,
+    "bandwidth_khz": 25.0,
+    "power_dbm": 35.0,
+    "location": {
+      "lat": 35.1,
+      "lon": 45.1
+    },
+    "start_time": "2025-10-17T12:00:00Z",
+    "duration_minutes": 120,
+    "priority": "ROUTINE",
+    "purpose": "Training exercise - tactical communication test"
+  },
+  "id": "test-001"
+}
