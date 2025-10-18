@@ -6,8 +6,23 @@ import pytest
 import asyncio
 from datetime import datetime, timezone
 from typing import Dict, Any
+import sys
+import os
+
+# Configure file logging for tests
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from logging_config import configure_logging, log_session_start
+
+configure_logging(log_level="INFO", log_to_file=True)
 
 from mcp_server.models import Location, Priority, ServiceBranch
+
+
+@pytest.fixture(scope="session", autouse=True)
+def log_test_session():
+    """Log test session start."""
+    log_session_start("pytest")
+    yield
 
 
 @pytest.fixture(scope="session")

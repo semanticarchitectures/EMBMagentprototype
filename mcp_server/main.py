@@ -16,15 +16,14 @@ import os
 from .models import MCPRequest, MCPResponse, MCPError
 from . import tools
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
-    ]
-)
+# Configure file logging
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from logging_config import configure_logging, get_logger as get_file_logger
 
-logger = structlog.get_logger()
+configure_logging(log_level="INFO", log_to_file=True)
+
+logger = structlog.get_logger("mcp_server")
 
 # Create FastAPI app
 app = FastAPI(

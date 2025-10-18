@@ -12,6 +12,11 @@ from typing import List, Dict, Any, Optional, TypedDict
 from dataclasses import dataclass
 import structlog
 from langgraph.graph import StateGraph, END
+import os
+import sys
+
+# Add project root to path for logging_config
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from llm_abstraction import (
     LLMProvider,
@@ -23,8 +28,14 @@ from llm_abstraction import (
 )
 from mcp_client import MCPClient, MCPTool, MCPError
 
+# Import and configure logging
+try:
+    from logging_config import configure_logging
+    configure_logging(log_level="INFO", log_to_file=True)
+except ImportError:
+    pass  # Logging config not available
 
-logger = structlog.get_logger()
+logger = structlog.get_logger("agents")
 
 
 class AgentState(TypedDict):

@@ -1,0 +1,200 @@
+# EMBM-J DS Multi-Agent System Configuration
+# Phase 4 Enhancement: Centralized configuration management
+
+# MCP Server Configuration
+mcp_server:
+  host: localhost
+  port: 8000
+  url: http://localhost:8000  # Can override with EMBM_SERVER_URL environment variable
+  health_check_timeout: 10  # seconds
+
+# Agent Configuration
+agents:
+  max_iterations: 5  # Maximum think-act-observe cycles per agent
+  timeout_seconds: 120  # Maximum execution time per agent
+
+  # Provider settings (can be overridden per-agent)
+  default_provider: anthropic  # anthropic, openai, google
+
+  # Individual agent settings
+  spectrum_manager:
+    max_iterations: 5
+    role: "Electromagnetic Spectrum Manager"
+
+  isr_manager:
+    max_iterations: 5
+    role: "Intelligence, Surveillance, Reconnaissance Manager"
+
+  ew_planner:
+    max_iterations: 5
+    role: "Electronic Warfare Planner"
+
+# LLM Provider Configuration
+llm:
+  # Cache settings
+  cache:
+    enabled: true
+    max_size: 100  # Maximum number of cached responses
+    ttl_seconds: 3600  # Time-to-live for cached entries
+
+  # Anthropic settings
+  anthropic:
+    model: claude-3-5-sonnet-20241022
+    max_tokens: 4096
+    temperature: 0.0
+
+  # OpenAI settings (if needed)
+  openai:
+    model: gpt-4
+    max_tokens: 4096
+    temperature: 0.0
+
+  # Google settings (if needed)
+  google:
+    model: gemini-1.5-pro
+    max_tokens: 4096
+    temperature: 0.0
+
+# Message Broker Configuration
+message_broker:
+  max_history: 1000  # Maximum number of messages to store
+  request_timeout: 5.0  # Timeout for request-response pattern (seconds)
+  enable_persistence: false  # Future: store messages to database
+
+# Logging Configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_to_file: true
+  log_dir: logs
+
+  # Rotating file handler settings
+  max_bytes: 10485760  # 10 MB
+  backup_count: 5
+
+  # Log file names
+  files:
+    app: embm_app.log
+    mcp_server: embm_mcp_server.log
+    agents: embm_agents.log
+    tests: embm_tests.log
+
+  # Format
+  format: json  # json or text
+
+# ROE (Rules of Engagement) Configuration
+roe:
+  # Restricted zones
+  restricted_zones:
+    - name: "Medical Facility Alpha"
+      center:
+        lat: 35.0
+        lon: 45.0
+      radius_km: 5.0
+      restricted_actions:
+        - COMMUNICATION
+        - JAMMING
+      priority: HIGH
+
+    - name: "Civilian Airport Bravo"
+      center:
+        lat: 35.3
+        lon: 45.3
+      radius_km: 10.0
+      restricted_actions:
+        - JAMMING
+        - HIGH_POWER_TRANSMISSION
+      priority: CRITICAL
+
+  # Frequency restrictions
+  frequency_restrictions:
+    - name: "Emergency Services Band"
+      min_mhz: 450.0
+      max_mhz: 470.0
+      restriction: PROHIBITED
+
+    - name: "Aviation Band"
+      min_mhz: 108.0
+      max_mhz: 137.0
+      restriction: COORDINATION_REQUIRED
+
+  # Power limits by priority
+  power_limits_dbm:
+    ROUTINE: 50
+    PRIORITY: 60
+    IMMEDIATE: 70
+    FLASH: 80
+
+# Deconfliction Configuration
+deconfliction:
+  # Frequency separation requirements (MHz)
+  min_frequency_separation_mhz: 10.0
+
+  # Geographic separation requirements (km)
+  min_geographic_separation_km: 1.0
+
+  # Time-based deconfliction
+  min_time_separation_minutes: 5
+
+  # Conflict resolution priority order
+  priority_order:
+    - FLASH
+    - IMMEDIATE
+    - PRIORITY
+    - ROUTINE
+
+# Database Configuration (Phase 5 - not yet implemented)
+database:
+  enabled: false
+  type: postgresql  # postgresql, sqlite
+  host: localhost
+  port: 5432
+  name: embm_db
+  # Credentials should be in environment variables:
+  # EMBM_DB_USER, EMBM_DB_PASSWORD
+
+# Web Dashboard Configuration (Phase 4)
+web_dashboard:
+  enabled: true
+  host: 0.0.0.0
+  port: 8080
+
+  # WebSocket settings
+  websocket:
+    enabled: true
+    path: /ws
+    heartbeat_interval: 30  # seconds
+
+  # UI settings
+  ui:
+    refresh_interval_ms: 1000  # Update interval for live data
+    max_history_items: 100  # Maximum items to show in history views
+    theme: dark  # dark or light
+
+# Metrics and Monitoring Configuration (Phase 4)
+metrics:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 9090
+    path: /metrics
+
+  # Metrics to collect
+  collect:
+    - agent_execution_time
+    - llm_cache_hit_rate
+    - mcp_tool_call_count
+    - deconfliction_approval_rate
+    - roe_violation_count
+    - message_broker_throughput
+
+# Development and Testing
+development:
+  debug_mode: false
+  mock_llm_responses: false  # Use mock responses instead of real LLM calls
+  sample_data_enabled: true  # Load sample frequency allocations
+
+# Performance Tuning
+performance:
+  async_agent_execution: true  # Enable parallel agent execution where possible
+  connection_pool_size: 10  # HTTP connection pool size
+  request_timeout_seconds: 30  # Timeout for external requests
