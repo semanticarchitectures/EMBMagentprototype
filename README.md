@@ -76,12 +76,35 @@ cp .env.example .env
 # Terminal 1: Start MCP Server
 python scripts/run_server.py
 
-# Terminal 2: Run agents with a workflow
-python scripts/run_agents.py --workflow frequency_allocation
+# Terminal 2: Run interactive chat demo with LLM
+python scripts/chat_demo.py
 
-# Optional: Start monitoring dashboard
+# Or use the Streamlit web interface
+streamlit run dashboard/app.py
+
+# Or run agents with a workflow
+python scripts/run_agents.py --workflow frequency_allocation
+```
+
+## Interactive Chat Demo
+
+Try the **LLM-powered chat interface** for real-time spectrum management queries:
+
+```bash
+# Command-line chat demo
+python scripts/chat_demo.py
+
+# Web-based Streamlit interface
 streamlit run dashboard/app.py
 ```
+
+Ask questions like:
+- "Can I use 151.5 MHz for a training exercise?"
+- "What frequencies are available in my area?"
+- "Check for interference on 225 MHz"
+- "Allocate frequency for ISR collection"
+
+See [CHAT_DEMO.md](CHAT_DEMO.md) for detailed documentation.
 
 ## Workflows
 
