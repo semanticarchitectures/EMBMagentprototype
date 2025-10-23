@@ -6,7 +6,7 @@ spectrum management tools to AI agents.
 """
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 import structlog
@@ -270,20 +270,132 @@ async def health_check() -> Dict[str, Any]:
     }
 
 
-@app.get("/")
-async def root() -> Dict[str, str]:
+@app.get("/", response_class=HTMLResponse)
+async def root() -> str:
     """Root endpoint with service information."""
-    return {
-        "service": "EMBM-J DS MCP Server",
-        "version": "0.1.0",
-        "description": "Mock EMBM-J DS system implementing Model Context Protocol",
-        "endpoints": {
-            "/mcp": "Main MCP endpoint (POST)",
-            "/mcp/tools": "List available tools (GET)",
-            "/health": "Health check (GET)",
-            "/docs": "API documentation (GET)"
-        }
-    }
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>EMBM-J DS MCP Server</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 40px 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+            }
+            .container {
+                background: white;
+                border-radius: 10px;
+                padding: 40px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            }
+            h1 {
+                color: #333;
+                margin-top: 0;
+                border-bottom: 3px solid #667eea;
+                padding-bottom: 10px;
+            }
+            .info {
+                background: #f5f5f5;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+            }
+            .endpoint {
+                background: #e8f4f8;
+                padding: 12px;
+                margin: 10px 0;
+                border-left: 4px solid #667eea;
+                border-radius: 3px;
+                font-family: 'Courier New', monospace;
+            }
+            .endpoint-desc {
+                color: #666;
+                font-size: 0.9em;
+                margin-top: 5px;
+            }
+            .status {
+                display: inline-block;
+                background: #4CAF50;
+                color: white;
+                padding: 5px 10px;
+                border-radius: 3px;
+                font-size: 0.9em;
+                margin-left: 10px;
+            }
+            a {
+                color: #667eea;
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            .links {
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🛰️ EMBM-J DS MCP Server <span class="status">Healthy</span></h1>
+
+            <div class="info">
+                <p><strong>Service:</strong> EMBM-J DS MCP Server</p>
+                <p><strong>Version:</strong> 0.1.0</p>
+                <p><strong>Description:</strong> Mock EMBM-J DS system implementing Model Context Protocol (MCP) for agent interaction</p>
+            </div>
+
+            <h2>📡 Available Endpoints</h2>
+
+            <div class="endpoint">
+                <strong>GET /health</strong>
+                <div class="endpoint-desc">Health check endpoint - Returns server status</div>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /mcp/tools</strong>
+                <div class="endpoint-desc">List all available MCP tools with their schemas</div>
+            </div>
+
+            <div class="endpoint">
+                <strong>POST /mcp</strong>
+                <div class="endpoint-desc">Main MCP endpoint - Execute tool calls via JSON-RPC 2.0</div>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /docs</strong>
+                <div class="endpoint-desc">Interactive API documentation (Swagger UI)</div>
+            </div>
+
+            <div class="endpoint">
+                <strong>GET /redoc</strong>
+                <div class="endpoint-desc">Alternative API documentation (ReDoc)</div>
+            </div>
+
+            <div class="links">
+                <h3>🔗 Quick Links</h3>
+                <ul>
+                    <li><a href="/health">Health Check</a></li>
+                    <li><a href="/mcp/tools">List Tools</a></li>
+                    <li><a href="/docs">API Documentation</a></li>
+                    <li><a href="/redoc">ReDoc Documentation</a></li>
+                </ul>
+            </div>
+
+            <div class="info" style="margin-top: 30px; background: #f0f7ff; border-left: 4px solid #667eea;">
+                <h3 style="margin-top: 0;">ℹ️ About MCP</h3>
+                <p>The Model Context Protocol (MCP) is a standardized protocol for AI agents to interact with external tools and services. This server provides spectrum management tools for the EMBM-J DS system.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 
 def _error_response(code: int, message: str, request_id: Any) -> JSONResponse:

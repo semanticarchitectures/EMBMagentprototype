@@ -13,10 +13,14 @@ import asyncio
 import os
 from datetime import datetime, timezone, timedelta
 import structlog
+import nest_asyncio
 
 from llm_abstraction import get_global_registry, LLMConfig
 from mcp_client import MCPClient
 from agents import SpectrumManagerAgent
+
+# Allow nested event loops (needed for Streamlit + async code)
+nest_asyncio.apply()
 
 logger = structlog.get_logger()
 
@@ -92,19 +96,40 @@ def format_message(role: str, content: str) -> str:
         return f'<div class="system-message"><b>System:</b> {content}</div>'
 
 
-async def process_user_input(user_input: str, agent, mcp_client):
-    """Process user input through the agent."""
+async def process_user_input_async(user_input: str, agent, mcp_client):
+    """Process user input through the agent (async version)."""
     try:
         # Check MCP server health
         is_healthy = await mcp_client.health_check()
         if not is_healthy:
             return "⚠️ MCP server is not responding. Please ensure it's running."
-        
+
         # Run the agent
         response = await agent.run(user_input)
         return response
     except Exception as e:
         logger.error("agent_error", error=str(e))
+        return f"Error processing request: {str(e)}"
+
+
+def process_user_input(user_input: str, agent, mcp_client):
+    """Process user input through the agent (sync wrapper)."""
+    try:
+        # Use asyncio.run() which properly handles the event loop
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If loop is already running, use nest_asyncio
+            response = loop.run_until_complete(
+                process_user_input_async(user_input, agent, mcp_client)
+            )
+        else:
+            # Otherwise create a new loop
+            response = asyncio.run(
+                process_user_input_async(user_input, agent, mcp_client)
+            )
+        return response
+    except Exception as e:
+        logger.error("chat_error", error=str(e))
         return f"Error processing request: {str(e)}"
 
 
@@ -133,11 +158,14 @@ def main():
             
             # Health check
             try:
-                loop = asyncio.new_event_loop()
-                is_healthy = loop.run_until_complete(mcp_client.health_check())
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    is_healthy = loop.run_until_complete(mcp_client.health_check())
+                else:
+                    is_healthy = asyncio.run(mcp_client.health_check())
                 status = "🟢 Healthy" if is_healthy else "🔴 Unhealthy"
                 st.metric("MCP Server", status)
-            except:
+            except Exception as e:
                 st.metric("MCP Server", "🔴 Offline")
         else:
             st.error("Failed to initialize system")
@@ -196,21 +224,18 @@ def main():
         # Process with agent
         with st.spinner("🤔 Agent is thinking..."):
             try:
-                loop = asyncio.new_event_loop()
-                response = loop.run_until_complete(
-                    process_user_input(user_input, agent, mcp_client)
-                )
-                
+                response = process_user_input(user_input, agent, mcp_client)
+
                 # Add agent response to history
                 st.session_state.messages.append({
                     "role": "assistant",
                     "content": response
                 })
-                
+
                 # Display agent response
                 with st.chat_message("assistant"):
                     st.markdown(response)
-                
+
                 # Rerun to update chat display
                 st.rerun()
             except Exception as e:
